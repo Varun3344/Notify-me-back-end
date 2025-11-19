@@ -9,6 +9,8 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+// Allow plain text bodies so clients don't need to set Content-Type headers
+app.use(express.text({ type: () => true }));
 
 // Connect MongoDB
 mongoose.connect(process.env.MONGO_URI, {

@@ -6,17 +6,25 @@ const router = express.Router();
 // POST /api/notify
 router.post("/", async (req, res) => {
   try {
-    const { email } = req.body;
+    // Accept either a raw text body or a JSON object with an email field
+    const email =
+      typeof req.body === "string"
+        ? req.body.trim()
+        : typeof req.body?.email === "string"
+          ? req.body.email.trim()
+          : "";
 
     // Empty email check
-    if (!email || email.trim() === "") {
+    if (!email) {
       return res.status(400).json({ message: "Email is required." });
     }
 
-    // Optional API Key check
-    const apiKey = req.headers["x-api-key"];
-    if (process.env.API_KEY && apiKey !== process.env.API_KEY) {
-      return res.status(401).json({ message: "Invalid API Key" });
+    // Do not store duplicates
+    const existing = await Notify.findOne({ email });
+    if (existing) {
+      return res
+        .status(200)
+        .json({ message: "Email already registered", data: existing });
     }
 
     // Save email
